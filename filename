@@ -1,0 +1,31 @@
+node(){
+    env.Branch= "feature/CommonUtilities_Login_week2_MVP1_V1.0.0"
+    env.repourl = "https://git-codecommit.ap-southeast-1.amazonaws.com/v1/repos/SCBLifeEasyMobileApp"
+    stage("Clone"){
+git branch: "${Branch}", credentialsId: '9096a001-5aee-4d08-bad7-e30330794c6f', url: "${repourl}"
+}
+    stage("Slack Notification"){
+sh 'git log --format="%ae" | head -1 > author'
+author1= readFile 'author'
+env.AUTHOR= author1.replaceAll("\\s","")
+sh 'echo Branch Name = ${Branch}'
+echo "Repo URL = ${repourl}"
+sh 'echo Commit Author = ${AUTHOR}'
+sh "echo ${Branch} | cut -d '_' -f 2 > featureName"
+feature= readFile 'featureName'
+env.FEATURE= feature.replaceAll("\\s", "")
+echo "FEATURE NAME = ${FEATURE}"
+sh '''cat config.xml | grep "widget" | head -1 | cut -d '"' -f 4 > buildvversion '''
+buildVersion2 = readFile 'buildvversion'
+env.buildtest= buildVersion2.replaceAll("\\s", "")
+sh 'echo BUILD VERSION = ${buildtest}'
+sh 'git log -1 --pretty=%B > cmessage'
+cm=readFile 'cmessage'
+env.cmsg=cm.trim()
+slackSend (baseUrl: 'https://capcopoc.slack.com/services/hooks/jenkins-ci/', channel: 'codecommit', color: '#439FE0', message: "*Started Job-* ${env.JOB_NAME} [Job build number=${env.BUILD_NUMBER}]\n\n*Repo URL =* ${repourl}\n*Branch Name =* ${Branch}\n*Feature name =* ${FEATURE}\n*Build Version=* ${buildtest}\n*Commit Message =* ${cmsg}\n*Commit Author =* ${AUTHOR}\n", token: 'Ikf028SVPz6aXBxRcTOOyCKg')
+
+}
+    stage("Install dependency"){
+//sh 'npm install'   
+}
+}
